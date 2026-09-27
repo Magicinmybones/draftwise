@@ -2,6 +2,8 @@
 
 Static Draftwise landing page prepared for Cloudflare Pages.
 
+Live site: https://draftwise.pages.dev
+
 ## Files
 
 - `index.html` — the complete site
