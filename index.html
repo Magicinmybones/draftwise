@@ -1,0 +1,632 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Draftwise — The studio. Dream brilliant forms.</title>
+<meta name="theme-color" content="#000000">
+<script>
+/* Entrance gate: runs before first paint. Content is only hidden when the
+   browser can actually play the entrance; otherwise the page is static as-is.
+   A failsafe reveals everything if the entrance never starts. */
+(function(){var d=document.documentElement,m=window.matchMedia;
+  if(!m||m('(prefers-reduced-motion: reduce)').matches||!d.animate||!(window.CSS&&CSS.supports('translate','0 1px')))return;
+  d.classList.add('is-entering');
+  window.__entranceFailsafe=setTimeout(function(){d.classList.remove('is-entering')},2500);
+})();
+</script>
+<style>
+/* ------------------------------------------------------------------
+   Fonts: subset + embedded so the file works offline.
+   "Antonio Draft" = Antonio @ wght 380, glyphs condensed to 86% width
+   (closest match to the reference display face).
+------------------------------------------------------------------- */
+@font-face{font-family:"Antonio Draft";src:url(assets/antonio-draft.woff2) format("woff2");font-weight:400;font-display:block}
+@font-face{font-family:"Inter Draft";src:url(assets/inter-draft.woff2) format("woff2");font-weight:400 600;font-display:block}
+
+/* ------------------------------------------------------------------
+   Scale system
+   --u is one design pixel (reference = 1280 x 800).
+   It is the smaller of width/1280 and height/800, so the composition
+   always fits, while the background and edge-anchored rows (nav,
+   footer) stretch to every edge: no letterboxing, no blank bands.
+   On very short screens --u is floored and the stage grows instead.
+------------------------------------------------------------------- */
+:root{
+  --u:min(calc(100vw / 1280), max(calc(100dvh / 800), 0.72px));
+  --axis:-3.5;              /* hero axis sits at x=636.5 in the reference */
+  --ink:#ffffff;
+  --nav:#d9d9d9;
+  --muted:#bfbfbf;
+  --dim:#939393;
+  --red:#fb2b2e;
+  --sans:"Inter Draft",Inter,"Helvetica Neue",Arial,system-ui,sans-serif;
+  --display:"Antonio Draft","Antonio","Oswald","Arial Narrow",sans-serif;
+  color-scheme:dark;
+}
+*,*::before,*::after{box-sizing:border-box}
+html,body{margin:0;height:100%;background:#000}
+body{font-family:var(--sans);color:var(--ink);-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;text-rendering:optimizeLegibility;overflow-x:hidden}
+a{color:inherit;text-decoration:none}
+button,textarea{font:inherit;color:inherit}
+ul{list-style:none;margin:0;padding:0}
+.nav-panel{display:contents}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+:focus-visible{outline:2px solid #fff;outline-offset:3px;border-radius:8px}
+
+/* ------------------------------------------------------------------ stage */
+.stage{position:relative;width:100%;min-height:100vh;min-height:100dvh;overflow:hidden;isolation:isolate}
+.bg{position:absolute;inset:0;z-index:-1;background:#000 url(assets/hero-background.jpg) center/cover no-repeat}
+.bg::after{content:"";position:absolute;left:0;right:0;bottom:0;height:calc(110 * var(--u));
+  background:linear-gradient(180deg,rgba(0,0,0,0) 0%,rgba(0,0,0,.08) 55%,rgba(0,0,0,.18) 100%)}
+
+/* ================================================================ DESKTOP
+   Every number below is a measured reference pixel. */
+/* ================================================================ DESKTOP (+ shared component styling for TABLET)
+   Desktop architecture holds from 1120px wide in landscape. Below that the
+   smallest copy (the line under the input, 9.6u) drops under ~8.4px, so the
+   tablet architecture takes over; below 620px the phone architecture does.
+   Tablet and phone reuse every component rule below through --u and only
+   override layout in their own blocks. */
+@media (min-width:1120px) and (min-aspect-ratio:1/1), (min-width:620px) and (max-width:1119px) and (min-height:501px), (min-width:1120px) and (max-aspect-ratio:999/1000), (max-width:619px), (max-width:1119px) and (max-height:500px){
+.stage{height:max(100dvh, calc(800 * var(--u)))}
+.bg::before{content:"";position:absolute;inset:0 0 auto 0;height:calc(90 * var(--u));background:linear-gradient(180deg,rgba(0,0,0,calc((var(--wide,0)) * .45)),rgba(0,0,0,0))}
+
+/* ---------- nav ---------- */
+.nav{position:absolute;inset:0 0 auto 0;height:calc(80 * var(--u));z-index:5}
+.logo{position:absolute;left:calc(24.6 * var(--u));top:calc(25.1 * var(--u));font-size:calc(22.5 * var(--u));line-height:calc(24 * var(--u));font-weight:500;letter-spacing:calc(0.55 * var(--u));color:#fff}
+.menu{position:absolute;left:0;top:calc(32 * var(--u));}
+.menu li{position:absolute;left:calc((var(--x) - 1.1) * var(--u));top:0}
+.menu{font-size:calc(12.45 * var(--u));line-height:calc(15 * var(--u));font-weight:500;color:var(--nav)}
+.menu a{display:flex;align-items:center;gap:calc(6.7 * var(--u));white-space:nowrap}
+.menu svg{width:calc(9 * var(--u));height:calc(5 * var(--u));margin-top:calc(2 * var(--u))}
+.menu li.soft svg{opacity:.62}
+.menu li.soft a{gap:calc(4.2 * var(--u))}
+.ask{position:absolute;right:calc(170.6 * var(--u));top:calc(34.6 * var(--u));font-size:calc(11.6 * var(--u));line-height:calc(15 * var(--u));font-weight:500;color:#dfdfdf}
+.btn-nav{position:absolute;right:calc(55 * var(--u));top:calc(23.8 * var(--u));width:calc(89.5 * var(--u));height:calc(36.2 * var(--u))}
+.btn-nav,.burger{border-radius:999px;
+  display:grid;place-items:center;font-size:calc(11.1 * var(--u));font-weight:600;color:#fff;
+  /* pill: curved rim (brighter on top & bottom, faint on the ends) over a soft vertical fill */
+  border:calc(1.8 * var(--u)) solid transparent;
+  background:linear-gradient(90deg,rgba(255,255,255,.045),rgba(255,255,255,0) 13%,rgba(255,255,255,0) 87%,rgba(255,255,255,.045)) padding-box,
+             linear-gradient(180deg,#1b1b1b 0%,#171717 40%,#1a1a1a 72%,#222 100%) padding-box,
+             linear-gradient(180deg,#4d4d4d 0%,#333 30%,#2d2d2d 60%,#454545 100%) border-box;
+  box-shadow:inset 0 calc(1.2 * var(--u)) 0 rgba(255,255,255,.1)}
+/* recess the pill sits in: a slightly larger, softly lit capsule behind it */
+.btn-nav::before,.burger::before{content:"";position:absolute;z-index:-1;inset:calc(-4.6 * var(--u)) calc(-3.8 * var(--u)) calc(-5.2 * var(--u)) calc(-3.8 * var(--u));border-radius:999px;pointer-events:none;
+  background:linear-gradient(180deg,rgba(255,255,255,.2) 0,rgba(255,255,255,.115) calc(1.2 * var(--u)),rgba(255,255,255,.08) 50%,rgba(255,255,255,.11) 100%);
+  box-shadow:0 0 calc(2.5 * var(--u)) calc(0.5 * var(--u)) rgba(255,255,255,.05)}
+.burger{display:none}
+
+
+/* ---------- hero ---------- */
+.hero{position:absolute;left:calc(50% + var(--axis) * var(--u));top:calc(50% + calc(-400 * var(--u)));width:0;height:0}
+.hero>*{position:absolute}
+h1{margin:0;left:calc(-240 * var(--u));width:calc(480 * var(--u));top:calc(194.3 * var(--u));font-family:var(--display);font-weight:400;font-size:calc(50.77 * var(--u));line-height:calc(54 * var(--u));letter-spacing:calc(-2.15 * var(--u));word-spacing:calc(1.2 * var(--u));text-align:center;color:#fff}
+h1 .hl,h1 .hl-in{display:block}
+h1 .hl:first-child{word-spacing:calc(3.2 * var(--u))}
+
+.prompt{left:calc(-222.5 * var(--u));top:calc(338 * var(--u));width:calc(446 * var(--u));height:calc(134 * var(--u));border-radius:calc(24.5 * var(--u));
+  background:rgba(38,38,36,.905);-webkit-backdrop-filter:blur(calc(22 * var(--u))) saturate(1.05);backdrop-filter:blur(calc(22 * var(--u))) saturate(1.05);
+  box-shadow:0 0 0 calc(1 * var(--u)) rgba(0,0,0,.55),inset 0 0 0 calc(4 * var(--u)) rgba(0,0,0,.0),0 calc(14 * var(--u)) calc(40 * var(--u)) rgba(0,0,0,.35)}
+.prompt::before{content:"";position:absolute;inset:0;border-radius:inherit;padding:calc(3 * var(--u));pointer-events:none;
+  background:
+    radial-gradient(30% 95% at 0% 100%,rgba(255,255,255,1) 0%,rgba(255,255,255,.85) 30%,rgba(255,255,255,.25) 62%,rgba(255,255,255,0) 100%),
+    radial-gradient(10% 55% at 100% 32%,rgba(200,200,200,.32),rgba(200,200,200,0)),
+    linear-gradient(90deg,#f2f2f2 0%,#b0b0b0 7%,#a3a3a3 20%,#9b9b9b 45%,#8e8e8e 70%,#828282 100%);
+  -webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;
+  mask:linear-gradient(#000 0 0) content-box exclude,linear-gradient(#000 0 0)}
+.prompt::after{content:"";position:absolute;inset:calc(3 * var(--u));border-radius:calc(21.5 * var(--u));pointer-events:none;box-shadow:inset 0 0 0 calc(1 * var(--u)) rgba(0,0,0,.42)}
+.field{position:absolute;inset:0;padding:calc(16.5 * var(--u)) calc(56 * var(--u)) calc(20 * var(--u)) calc(18.2 * var(--u));font-size:calc(12.2 * var(--u));line-height:calc(17 * var(--u));font-weight:400;letter-spacing:0}
+.field textarea,.mirror{position:absolute;inset:0;margin:0;padding:inherit;font:inherit;line-height:inherit;letter-spacing:inherit;border:0;white-space:pre-wrap;overflow-wrap:break-word}
+.field textarea{width:100%;height:100%;background:transparent;resize:none;outline:none;color:transparent;caret-color:transparent;z-index:2}
+.mirror{color:#f6f6f6;pointer-events:none;z-index:1;overflow:hidden}
+.caret{display:inline-block;width:calc(2.2 * var(--u));height:calc(17 * var(--u));margin-left:calc(3.6 * var(--u));vertical-align:top;position:relative;top:calc(1 * var(--u));background:#e0282a;border-radius:calc(1 * var(--u));animation:blink 1.05s steps(1) infinite}
+@keyframes blink{50%{opacity:0}}
+.send{position:absolute;left:calc(396.5 * var(--u));top:calc(87.6 * var(--u));width:calc(28.6 * var(--u));height:calc(28.6 * var(--u));border-radius:50%;border:0;padding:0;cursor:pointer;z-index:3;
+  display:grid;place-items:center;background:radial-gradient(circle at 50% 35%,#ff3437 0%,#fb2b2e 60%,#f5282c 100%);
+  box-shadow:0 0 0 calc(2 * var(--u)) rgba(0,0,0,.28);transition:transform .15s}
+.send:active{transform:scale(.92)}
+.send svg{width:calc(9.4 * var(--u));height:calc(10.2 * var(--u))}
+
+.lede{left:calc(-240 * var(--u));width:calc(480 * var(--u));top:calc(482.8 * var(--u));margin:0;font-size:calc(9.6 * var(--u));line-height:calc(14 * var(--u));text-align:center;color:var(--muted);letter-spacing:0}
+.lede span{display:block}
+.lede span+span{letter-spacing:calc(-0.075 * var(--u))}
+
+.cta.ghost,.cta.red{top:calc(523 * var(--u));height:calc(41 * var(--u));border-radius:calc(21 * var(--u));display:grid;place-items:center;font-size:calc(11.1 * var(--u));font-weight:600;color:#fff;white-space:nowrap}
+.cta.ghost{left:calc(-124.5 * var(--u));width:calc(116 * var(--u));border:calc(2 * var(--u)) solid transparent;padding-top:calc(0.8 * var(--u));
+  background:linear-gradient(180deg,#191919 0%,#131313 30%,#111 50%,#141414 72%,#1c1c1c 88%,#262626 100%) padding-box,
+             linear-gradient(180deg,#5a5a5a 0%,#454545 30%,#4a4a4a 60%,#444 100%) border-box;
+  box-shadow:inset 0 calc(1.5 * var(--u)) 0 rgba(255,255,255,.12),0 calc(0.8 * var(--u)) 0 calc(2.8 * var(--u)) #252525,0 calc(3 * var(--u)) calc(6 * var(--u)) calc(3 * var(--u)) rgba(0,0,0,.35)}
+.cta.red{left:calc(5.5 * var(--u));top:calc(526 * var(--u));width:calc(118 * var(--u));height:calc(37 * var(--u));border-radius:calc(18.5 * var(--u));padding-top:calc(0.4 * var(--u));
+  background:
+    radial-gradient(calc(22 * var(--u)) calc(26 * var(--u)) at 0% 50%,rgba(236,112,108,.62),rgba(236,112,108,0)),
+    radial-gradient(calc(34 * var(--u)) calc(30 * var(--u)) at 100% 62%,rgba(242,120,114,.66),rgba(242,120,114,0)),
+    linear-gradient(180deg,#c81415 0%,#c81415 28%,#ca1619 52%,#ce1b1d 70%,#d42222 92%,#e52427 97%,#c02020 100%);
+  box-shadow:0 0 0 calc(4 * var(--u)) rgba(0,0,0,.88),inset 0 calc(-1 * var(--u)) 0 rgba(255,110,110,.35)}
+.cta{transition:filter .15s}
+@media (hover:hover){.cta:hover{filter:brightness(1.12)}}
+
+.glance{position:absolute;left:calc(50% + var(--axis) * var(--u));bottom:calc(71.5 * var(--u));transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:calc(7.2 * var(--u));font-size:calc(11.14 * var(--u));line-height:calc(13 * var(--u));color:var(--dim);white-space:nowrap}
+.glance svg{width:calc(7.2 * var(--u));height:calc(8.8 * var(--u))}
+
+/* ---------- footer ---------- */
+.foot{position:absolute;left:0;right:0;bottom:0;height:calc(55 * var(--u));z-index:4;
+  background:rgba(0,0,0,.33);-webkit-backdrop-filter:blur(calc(6 * var(--u)));backdrop-filter:blur(calc(6 * var(--u)))}
+.foot::before{content:"";position:absolute;top:0;left:calc(25 * var(--u));right:calc(35 * var(--u));height:calc(1 * var(--u));
+  background:linear-gradient(90deg,rgba(255,255,255,.018),rgba(255,255,255,.028) 25%,rgba(255,255,255,.038) 45%,rgba(255,255,255,.036) 70%,rgba(255,255,255,.022) 100%)}
+.reel{position:absolute;left:calc(25 * var(--u));top:calc(9 * var(--u));display:flex;align-items:center;gap:calc(11.4 * var(--u));background:none;border:0;padding:0;cursor:pointer;font-size:calc(11.3 * var(--u));line-height:calc(14 * var(--u));color:#8c8c8c}
+.play{width:calc(51 * var(--u));height:calc(37 * var(--u));border-radius:calc(7 * var(--u));display:grid;place-items:center;padding-left:calc(1.2 * var(--u));
+  background:#272727;border:calc(1 * var(--u)) solid #3d3d3d;border-top-color:#474747;border-bottom-color:#333;box-shadow:inset 0 calc(1.5 * var(--u)) 0 rgba(0,0,0,.35)}
+.play svg{width:calc(8.8 * var(--u));height:calc(9.8 * var(--u))}
+.reel>span:last-child{position:relative;top:calc(-0.8 * var(--u))}
+.logos{position:absolute;left:calc(50% + (296.5 - 640) * var(--u));width:calc(680 * var(--u));top:0;height:100%;overflow:hidden;
+  -webkit-mask:linear-gradient(90deg,transparent,#000 14%,#000 86%,transparent);mask:linear-gradient(90deg,transparent,#000 14%,#000 86%,transparent)}
+.logos .marquee-track{display:flex;align-items:baseline;width:max-content;height:100%;padding-top:calc(12.7 * var(--u));animation:marquee 20s linear infinite}
+@media (hover:hover){.logos:hover .marquee-track{animation-play-state:paused}}
+.logos li{display:block;flex:none;line-height:1;margin-right:calc(38 * var(--u));color:#a6a6a6;white-space:nowrap;
+  font-size:calc(var(--fs) * var(--u));letter-spacing:calc(var(--ls) * var(--u))}
+.award{position:absolute;right:calc(36.5 * var(--u));top:calc(11.5 * var(--u));display:flex;align-items:center;gap:calc(12.4 * var(--u));font-size:calc(10.3 * var(--u));font-weight:500;color:#dadada;gap:calc(8.8 * var(--u))}
+.award svg{width:calc(59.5 * var(--u));height:calc(31 * var(--u))}
+.ctas{left:0;top:0}.ctas>.cta{position:absolute}
+}
+
+/* ================================================================ TABLET
+   Same components, same styling (all sized through --u). Only the
+   architecture changes: a full-height column (nav / hero / hint /
+   footer) sized for reading distance on a tablet, the nav collapses into
+   a burger that opens a glass panel, and the footer keeps desktop's
+   single row. --u here is a tablet unit: it grows with the smaller
+   screen dimension and never drops below 0.9 of the prototype size. */
+@media (min-width:620px) and (max-width:1119px) and (min-height:501px), (min-width:1120px) and (max-aspect-ratio:999/1000){:root{--u:clamp(0.9px, min(calc(100vw / 620), calc(100dvh / 620)), 1.5px)}}
+@media (min-width:620px) and (max-width:1119px) and (min-height:501px), (min-width:1120px) and (max-aspect-ratio:999/1000), (max-width:619px), (max-width:1119px) and (max-height:500px){
+.stage{height:auto;min-height:100vh;min-height:100dvh;display:flex;flex-direction:column}
+.bg{background-position:34% center}
+
+/* nav: logo stays, links + actions move into the panel */
+.nav{position:relative;inset:auto;height:auto;display:flex;align-items:center;justify-content:space-between;
+  padding:calc(calc(22 * var(--u)) + env(safe-area-inset-top,0px)) calc(28 * var(--u)) calc(12 * var(--u))}
+.logo{position:relative;left:auto;top:auto}
+.burger{display:grid;position:relative;width:calc(38 * var(--u));height:calc(38 * var(--u));padding:0;cursor:pointer}
+.burger i,.burger i::before,.burger i::after{display:block;width:calc(14 * var(--u));height:calc(1.5 * var(--u));border-radius:calc(1 * var(--u));background:#fff;transition:transform .32s cubic-bezier(.22,1,.36,1),opacity .2s}
+.burger i{position:relative}
+.burger i::before,.burger i::after{content:"";position:absolute;left:0}
+.burger i::before{top:calc(-4.5 * var(--u))}.burger i::after{top:calc(4.5 * var(--u))}
+.nav.open .burger i{background:transparent}
+.nav.open .burger i::before{transform:translateY(calc(4.5 * var(--u))) rotate(45deg)}
+.nav.open .burger i::after{transform:translateY(calc(-4.5 * var(--u))) rotate(-45deg)}
+
+.nav-panel{position:absolute;z-index:20;top:calc(100% + calc(4 * var(--u)));right:calc(28 * var(--u));width:calc(280 * var(--u));padding:calc(10 * var(--u));
+  border-radius:calc(22 * var(--u));background:rgba(38,38,36,.905);-webkit-backdrop-filter:blur(calc(22 * var(--u))) saturate(1.05);backdrop-filter:blur(calc(22 * var(--u))) saturate(1.05);
+  border:calc(1.3 * var(--u)) solid transparent;
+  background:linear-gradient(rgba(38,38,36,.905),rgba(38,38,36,.905)) padding-box,
+             linear-gradient(180deg,#4d4d4d 0%,#333 30%,#2d2d2d 60%,#454545 100%) border-box;
+  box-shadow:0 0 0 calc(1 * var(--u)) rgba(0,0,0,.55),0 calc(14 * var(--u)) calc(40 * var(--u)) rgba(0,0,0,.35);
+  transform-origin:top right;opacity:0;visibility:hidden;translate:0 calc(-6 * var(--u));scale:.97;
+  transition:opacity .28s cubic-bezier(.33,1,.68,1),translate .36s cubic-bezier(.22,1,.36,1),scale .36s cubic-bezier(.22,1,.36,1),visibility 0s linear .36s}
+.nav.open .nav-panel{opacity:1;visibility:visible;translate:0 0;scale:1;transition-delay:0s}
+.menu{position:static;font-size:calc(13.5 * var(--u));line-height:calc(16 * var(--u))}
+.menu ul{display:flex;flex-direction:column}
+.menu li{position:static}
+.menu a,.menu li.soft a{justify-content:space-between;height:calc(40 * var(--u));padding:0 calc(12 * var(--u));border-radius:calc(12 * var(--u));transition:background .2s}
+.menu a:focus-visible{background:rgba(255,255,255,.05)}
+@media (hover:hover){.menu a:hover{background:rgba(255,255,255,.05)}}
+.menu svg{margin-top:0}
+.ask{position:static;display:flex;align-items:center;height:calc(40 * var(--u));padding:0 calc(12 * var(--u));font-size:calc(13.5 * var(--u))}
+.btn-nav{position:relative;right:auto;top:auto;width:auto;height:calc(36.2 * var(--u));padding:0 calc(18 * var(--u));font-size:calc(12.2 * var(--u));margin:calc(5 * var(--u)) calc(5 * var(--u)) calc(6 * var(--u)) 0}
+/* panel layout: links on top, then the two actions on one row */
+.nav-panel{display:grid;grid-template-columns:1fr auto;align-items:center}
+.nav-panel .menu{grid-column:1/-1;margin-bottom:calc(8 * var(--u));padding-bottom:calc(8 * var(--u));border-bottom:1px solid rgba(255,255,255,.07)}
+
+/* hero: same centred stack, desktop spacing ratios */
+.hero{position:relative;left:auto;top:auto;width:auto;height:auto;flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:calc(20 * var(--u)) calc(28 * var(--u))}
+.hero>*{position:relative}
+h1{left:auto;top:auto;width:auto;margin:0 0 calc(35.7 * var(--u))}
+.prompt{left:auto;top:auto;flex:none;max-width:100%}
+.send{left:auto;top:auto;right:calc(20.9 * var(--u));bottom:calc(17.8 * var(--u))}
+.lede{left:auto;top:auto;width:auto;margin:calc(10.8 * var(--u)) 0 calc(12.2 * var(--u))}
+.ctas{display:flex;align-items:center;gap:calc(14 * var(--u))}
+.ctas>.cta{position:relative}
+.cta.ghost,.cta.red{left:auto;top:auto}
+
+.glance{position:relative;left:auto;bottom:auto;transform:none;align-self:center;margin:0 0 calc(16 * var(--u))}
+
+/* footer: desktop's single row, laid out with grid instead of coordinates */
+.foot{position:relative;left:auto;right:auto;bottom:auto;height:auto;min-height:calc(55 * var(--u));display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;column-gap:calc(24 * var(--u));
+  padding:0 calc(calc(28 * var(--u)) + env(safe-area-inset-right,0px)) env(safe-area-inset-bottom,0px) calc(calc(28 * var(--u)) + env(safe-area-inset-left,0px))}
+.foot::before{left:calc(28 * var(--u));right:calc(28 * var(--u))}
+.reel,.award{position:static}
+.logos{position:relative;left:auto;width:auto;height:calc(55 * var(--u));min-width:0}
+}
+@media (prefers-reduced-motion:reduce) and (min-width:620px) and (max-width:1119px) and (min-height:501px), (prefers-reduced-motion:reduce) and (min-width:1120px) and (max-aspect-ratio:999/1000){
+  .nav-panel{transition:opacity .2s,visibility 0s linear .2s;translate:none;scale:none}
+  .nav.open .nav-panel{transition:opacity .2s}
+  /* logos stay still: wrap and centre instead of scrolling */
+  .foot{padding-top:calc(9 * var(--u));padding-bottom:calc(calc(6 * var(--u)) + env(safe-area-inset-bottom,0px))}
+  .reel{grid-column:1;grid-row:1}.award{grid-column:3;grid-row:1}
+  .logos{grid-column:1/-1;grid-row:2;height:auto;padding:calc(8 * var(--u)) 0 calc(6 * var(--u));-webkit-mask:none;mask:none}
+  .logos .marquee-track{animation:none;width:auto;height:auto;padding:0;flex-wrap:wrap;justify-content:center;align-items:baseline;row-gap:calc(6 * var(--u))}
+  .logos li{margin:0 calc(19 * var(--u))}
+  .logos li.dup{display:none}
+}
+
+/* logo word treatments (typographic stand-ins, no brand marks) */
+.l1{font-weight:500;letter-spacing:.17em;font-size:calc(13.2 * var(--u))}
+.l2{font-weight:400;letter-spacing:.03em;font-size:calc(22.5 * var(--u))}
+.l3{font-weight:600;letter-spacing:-.01em;font-size:calc(15.6 * var(--u))}
+.l4{font-weight:500;letter-spacing:-.02em;font-size:calc(17.6 * var(--u))}
+.l5{font-weight:500;letter-spacing:-.01em;font-size:calc(17.4 * var(--u))}
+.l6{font-weight:400;letter-spacing:-.02em;font-size:calc(17.6 * var(--u))}
+
+/* ================================================================ PHONE
+   Below 620px the tablet unit would push the copy under the prototype's
+   own 9.6px and squeeze the footer's logo window below ~170px, so phones
+   get their own arrangement. Components are the shared ones above (sized
+   by --u); this block only changes architecture, plus a few reading-size
+   floors for small screens. */
+@media (max-width:619px), (max-width:1119px) and (max-height:500px){
+:root{--u:clamp(0.86px, min(calc(100vw / 365), calc(100dvh / 600)), 1.2px)}
+.bg{background-position:30% center}
+.bg::after{height:46%;background:linear-gradient(180deg,rgba(0,0,0,0) 0%,rgba(0,0,0,.38) 38%,rgba(0,0,0,.7) 66%,rgba(0,0,0,.78) 100%)}
+.nav{padding:calc(calc(18 * var(--u)) + env(safe-area-inset-top,0px)) calc(calc(20 * var(--u)) + env(safe-area-inset-right,0px)) calc(10 * var(--u)) calc(calc(20 * var(--u)) + env(safe-area-inset-left,0px))}
+.nav-panel{right:calc(calc(20 * var(--u)) + env(safe-area-inset-right,0px));width:min(calc(280 * var(--u)), calc(100vw - calc(40 * var(--u))))}
+.menu a,.menu li.soft a,.ask{height:max(calc(40 * var(--u)),44px)}      /* 44px touch rows */
+.nav-panel .btn-nav::after{content:"";position:absolute;inset:calc(min(0px, (calc(36.2 * var(--u)) - 44px) / 2)) -4px}   /* 44px tap area, same pill */
+
+.hero{padding:calc(10 * var(--u)) calc(calc(20 * var(--u)) + env(safe-area-inset-right,0px)) calc(12 * var(--u)) calc(calc(20 * var(--u)) + env(safe-area-inset-left,0px))}
+h1{margin-bottom:calc(24 * var(--u))}
+.prompt{width:100%;max-width:calc(446 * var(--u))}
+.field{font-size:16px;line-height:22px}                 /* 16px: iOS does not zoom the page when the field is tapped */
+.caret{height:22px;top:0}
+.send::after{content:"";position:absolute;inset:-8px;border-radius:50%}   /* larger touch target, same look */
+.lede{width:auto;max-width:34ch;margin:calc(14 * var(--u)) 0 calc(16 * var(--u));font-size:max(calc(9.6 * var(--u)),12.5px);line-height:1.45;text-wrap:balance}
+.lede span{display:inline}
+.lede span+span{letter-spacing:0}
+.cta.ghost,.cta.red{font-size:max(calc(11.1 * var(--u)),12px)}
+.glance{margin-bottom:calc(10 * var(--u));font-size:max(calc(11.14 * var(--u)),12px)}
+
+/* footer, in the original reading order: the reel, then the logos with the award beside them */
+.foot{grid-template-columns:minmax(0,1fr) auto;column-gap:calc(16 * var(--u));
+  padding:calc(8 * var(--u)) calc(calc(20 * var(--u)) + env(safe-area-inset-right,0px)) env(safe-area-inset-bottom,0px) calc(calc(20 * var(--u)) + env(safe-area-inset-left,0px))}
+.foot::before{left:calc(20 * var(--u));right:calc(20 * var(--u))}
+.reel{grid-column:1/-1;grid-row:1;justify-self:start;font-size:max(calc(11.3 * var(--u)),12px);white-space:nowrap}
+.logos{grid-column:1;grid-row:2}
+.award{grid-column:2;grid-row:2;font-size:max(calc(10.3 * var(--u)),11px)}
+}
+
+/* phones held sideways: little height, plenty of width. The hero goes
+   side by side (headline | input, copy, buttons), the footer returns to
+   desktop's single row and the menu uses two columns, so the page fits
+   one screen instead of scrolling. */
+@media (min-width:640px) and (max-width:1119px) and (max-height:500px) and (min-aspect-ratio:1/1){
+:root{--u:clamp(0.82px, calc(100dvh / 440), 1.1px)}
+.nav{padding-top:calc(calc(12 * var(--u)) + env(safe-area-inset-top,0px));padding-bottom:calc(4 * var(--u))}
+.hero{display:grid;grid-template-columns:auto minmax(0,calc(446 * var(--u)));grid-template-areas:"h p" "h l" "h c";column-gap:calc(36 * var(--u));
+  align-content:center;justify-content:center;align-items:center;padding-top:calc(4 * var(--u));padding-bottom:calc(4 * var(--u))}
+h1{grid-area:h;margin:0}
+.prompt{grid-area:p}
+.lede{grid-area:l;justify-self:center;max-width:none;margin:calc(10 * var(--u)) 0 calc(12 * var(--u))}
+.ctas{grid-area:c;justify-self:center}
+.glance{margin-bottom:calc(8 * var(--u))}
+.bg::after{height:calc(110 * var(--u));background:linear-gradient(180deg,rgba(0,0,0,0) 0%,rgba(0,0,0,.08) 55%,rgba(0,0,0,.18) 100%)}
+.foot{grid-template-columns:auto minmax(0,1fr) auto;column-gap:calc(24 * var(--u));padding-top:0}
+.reel,.logos,.award{grid-column:auto;grid-row:auto}
+.nav-panel{width:calc(440 * var(--u))}
+.menu ul{display:grid;grid-template-columns:1fr 1fr;column-gap:calc(4 * var(--u))}
+}
+
+@media (prefers-reduced-motion:reduce) and (max-width:619px), (prefers-reduced-motion:reduce) and (max-width:1119px) and (max-height:500px){
+  .nav-panel{transition:opacity .2s,visibility 0s linear .2s;translate:none;scale:none}
+  .nav.open .nav-panel{transition:opacity .2s}
+  /* logos stay still: they get their own line and wrap, centred */
+  .reel{grid-column:1/-1;grid-row:1}
+  .logos{grid-column:1/-1;grid-row:2;height:auto;padding:calc(8 * var(--u)) 0 calc(4 * var(--u));-webkit-mask:none;mask:none}
+  .award{grid-column:1/-1;grid-row:3;justify-self:center;padding-bottom:calc(8 * var(--u))}
+  .logos .marquee-track{animation:none;width:auto;height:auto;padding:0;flex-wrap:wrap;justify-content:center;align-items:baseline;row-gap:calc(6 * var(--u))}
+  .logos li{margin:0 calc(12 * var(--u))}
+  .logos li.dup{display:none}
+}
+
+/* ------------------------------------------------------------------
+   ENTRANCE — initial states only. They exist solely while
+   html.is-entering is set (JS-gated, removed the moment the timeline
+   starts). The background (.bg) and the footer bar are never touched.
+------------------------------------------------------------------- */
+.is-entering :is(.logo,.menu li,.ask,.btn-nav,.burger,.prompt,.lede span,.cta,.glance,.reel,.award){opacity:0}
+.is-entering h1 .hl-in{translate:0 105%}
+.is-entering h1 .hl,h1.is-masking .hl{overflow:hidden}
+.is-entering .caret{animation:none;opacity:0}
+
+.is-entering .logos{opacity:0}
+@media (min-aspect-ratio:17/10){:root{--wide:.7}}
+@media (min-aspect-ratio:2/1){:root{--wide:1}}
+
+
+/* ------------------------------------------------------------------
+   PROMPT RIM — MOVING GRADIENT
+   The rim is a soft grey gradient: a lighter-grey side and a darker-grey
+   side blended smoothly all the way round. The whole ring rotates, so
+   the light and dark greys travel around the stroke together.
+   No highlight, glow or extra layer: only the stroke's own colours move.
+   Clockwise by default; add class "ccw" to .prompt for anticlockwise.
+   Speed: change 3s below.
+------------------------------------------------------------------- */
+@property --rim-a{syntax:'<angle>';inherits:false;initial-value:0deg}
+@keyframes rim-turn{to{--rim-a:360deg}}
+@media (prefers-reduced-motion:no-preference){
+  @supports (background:conic-gradient(from 0deg,#000,#fff)){
+    .prompt::before{background:conic-gradient(from var(--rim-a) at 50% 50%,#aaaaaa 0deg,#a2a2a2 10deg,#9b9b9b 20deg,#949494 30deg,#8e8e8e 40deg,#888888 50deg,#848484 60deg,#818181 70deg,#7f7f7f 80deg,#7e7e7e 90deg,#7f7f7f 100deg,#818181 110deg,#848484 120deg,#888888 130deg,#8e8e8e 140deg,#949494 150deg,#9b9b9b 160deg,#a2a2a2 170deg,#aaaaaa 180deg,#b2b2b2 190deg,#b9b9b9 200deg,#c0c0c0 210deg,#c6c6c6 220deg,#cccccc 230deg,#d0d0d0 240deg,#d3d3d3 250deg,#d5d5d5 260deg,#d6d6d6 270deg,#d5d5d5 280deg,#d3d3d3 290deg,#d0d0d0 300deg,#cccccc 310deg,#c6c6c6 320deg,#c0c0c0 330deg,#b9b9b9 340deg,#b2b2b2 350deg,#aaaaaa 360deg);animation:rim-turn 3s linear infinite;animation-play-state:paused}
+    .prompt.rim-live::before{animation-play-state:running}
+    .prompt.ccw::before{animation-direction:reverse}
+  }
+}
+@keyframes marquee{to{transform:translateX(-50%)}}
+/* reduced motion on desktop: the logos stay put, exactly as in the prototype */
+@media (prefers-reduced-motion:reduce) and (min-width:1120px) and (min-aspect-ratio:1/1){
+  .logos{left:calc(50% - 640 * var(--u));width:calc(1280 * var(--u));overflow:visible;-webkit-mask:none;mask:none}
+  .logos .marquee-track{display:block;padding:0;width:auto;animation:none}
+  .logos li{position:absolute;margin:0;left:calc(var(--lx) * var(--u));top:calc(var(--ly) * var(--u))}
+  .logos li.dup{display:none}
+}
+@media (prefers-reduced-motion:reduce){.caret,.marquee-track{animation:none}}
+</style>
+</head>
+<body>
+<div class="stage">
+  <div class="bg" aria-hidden="true"></div>
+
+  <header class="nav" id="nav">
+    <a class="logo" href="#" aria-label="Draftwise home">Draftwise</a>
+    <div class="nav-panel" id="nav-panel">
+    <nav class="menu" id="menu" aria-label="Primary">
+      <ul>
+        <li style="--x:157"><a href="#">Pro plans<svg viewBox="0 0 9 5" fill="none" aria-hidden="true"><path d="M.75.75 4.5 4.25 8.25.75" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></a></li>
+        <li style="--x:252"><a href="#">Toolkits<svg viewBox="0 0 9 5" fill="none" aria-hidden="true"><path d="M.75.75 4.5 4.25 8.25.75" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></a></li>
+        <li style="--x:338"><a href="#">Agencies<svg viewBox="0 0 9 5" fill="none" aria-hidden="true"><path d="M.75.75 4.5 4.25 8.25.75" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></a></li>
+        <li style="--x:433"><a href="#">Enterprise</a></li>
+        <li style="--x:518"><a href="#">Read</a></li>
+        <li style="--x:571"><a href="#">Method<svg viewBox="0 0 9 5" fill="none" aria-hidden="true"><path d="M.75.75 4.5 4.25 8.25.75" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></a></li>
+        <li class="soft" style="--x:656"><a href="#">Train<svg viewBox="0 0 9 5" fill="none" aria-hidden="true"><path d="M1.25 1 4.5 4 7.75 1" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg></a></li>
+        <li class="soft" style="--x:724"><a href="#">Members<svg viewBox="0 0 9 5" fill="none" aria-hidden="true"><path d="M1.25 1 4.5 4 7.75 1" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg></a></li>
+        <li style="--x:817"><a href="#">Careers<svg viewBox="0 0 9 5" fill="none" aria-hidden="true"><path d="M.75.75 4.5 4.25 8.25.75" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></a></li>
+      </ul>
+    </nav>
+    <a class="ask" href="#">Ask us</a>
+    <a class="btn-nav" href="#">Get results</a>
+    </div>
+    <button class="burger" id="burger" aria-label="Open menu" aria-expanded="false" aria-controls="nav-panel"><i></i></button>
+  </header>
+
+  <main class="hero">
+    <h1 id="headline"><span class="hl"><span class="hl-in">The studio.</span></span><span class="hl"><span class="hl-in">Dream brilliant forms.</span></span></h1>
+
+    <form class="prompt" id="prompt" autocomplete="off">
+      <label class="sr" for="brief">Describe what you want to make</label>
+      <div class="field">
+        <div class="mirror" id="mirror" aria-hidden="true"><span id="mtext">A rare form</span><span class="caret" id="caret"></span></div>
+        <textarea id="brief" name="brief" spellcheck="false">A rare form</textarea>
+      </div>
+      <button class="send" type="submit" aria-label="Generate">
+        <svg viewBox="0 0 10 11" fill="none" aria-hidden="true"><path d="M5 10.1V1.3M1.2 4.9 5 1.1l3.8 3.8" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
+    </form>
+
+    <p class="lede"><span>Organize your campaign. Draftwise’s AI layout assistant builds the smart set: pages,</span> <span>ads, emails, social. On-brand, truly editable. Then resize it, translate it, ship it.</span></p>
+
+    <div class="ctas">
+      <a class="cta ghost" href="#">Get results</a>
+      <a class="cta red" href="#">Contact teams</a>
+    </div>
+  </main>
+
+  <a class="glance" href="#preview">
+    <svg viewBox="0 0 8 10" fill="none" aria-hidden="true"><path d="M4 .8v8M1.2 6 4 8.8 6.8 6" stroke="#fff" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    <span>Glance here to preview</span>
+  </a>
+
+  <footer class="foot">
+    <button class="reel" type="button">
+      <span class="play"><svg viewBox="0 0 9 10" aria-hidden="true"><path d="M1.2 1.1c0-.7.8-1.1 1.4-.8l5.6 3.9c.5.4.5 1.2 0 1.6L2.6 9.7c-.6.4-1.4 0-1.4-.8z" fill="#fff"/></svg></span>
+      <span>Play our 60-second reel</span>
+    </button>
+
+    <div class="logos" aria-label="Teams using Draftwise">
+      <ul class="marquee-track">
+        <li class="l1" style="--lx:378;--ly:21;--fs:14.67;--ls:1.049">FIREWALL</li>
+        <li class="l2" style="--lx:479;--ly:15;--fs:25.16;--ls:0.48">cada</li>
+        <li class="l3" style="--lx:576;--ly:20;--fs:12.8;--ls:0.29">snaptrude</li>
+        <li class="l4" style="--lx:689;--ly:19;--fs:17.33;--ls:-1.895">dash0</li>
+        <li class="l5" style="--lx:777;--ly:20;--fs:16.0;--ls:0.44">Meta</li>
+        <li class="l6" style="--lx:839;--ly:18;--fs:17.0;--ls:-0.86">Google</li>
+        <li class="l1 dup" aria-hidden="true" style="--lx:378;--ly:21;--fs:14.67;--ls:1.049">FIREWALL</li><li class="l2 dup" aria-hidden="true" style="--lx:479;--ly:15;--fs:25.16;--ls:0.48">cada</li><li class="l3 dup" aria-hidden="true" style="--lx:576;--ly:20;--fs:12.8;--ls:0.29">snaptrude</li><li class="l4 dup" aria-hidden="true" style="--lx:689;--ly:19;--fs:17.33;--ls:-1.895">dash0</li><li class="l5 dup" aria-hidden="true" style="--lx:777;--ly:20;--fs:16.0;--ls:0.44">Meta</li><li class="l6 dup" aria-hidden="true" style="--lx:839;--ly:18;--fs:17.0;--ls:-0.86">Google</li>
+      </ul>
+    </div>
+
+    <div class="award">
+      <span>PitchDeck 2024</span>
+      <svg viewBox="4.4 3.1 49.2 27.3" fill="none" aria-label="App of the Day award">
+        <g stroke="#e6e6e6" stroke-width="1.25" stroke-linecap="round">
+          <path d="M10.5 3.5C6 8.5 5.4 17 9.6 23c2.4 3.4 6.2 5.6 10.4 6.3"/>
+          <path d="M47.5 3.5C52 8.5 52.6 17 48.4 23c-2.4 3.4-6.2 5.6-10.4 6.3"/>
+        </g>
+        <g fill="#e6e6e6">
+          <ellipse cx="10.3" cy="6.4" rx="1.3" ry="2.6" transform="rotate(28 10.3 6.4)"/>
+          <ellipse cx="7.3" cy="10.6" rx="1.3" ry="2.7" transform="rotate(12 7.3 10.6)"/>
+          <ellipse cx="5.9" cy="15.4" rx="1.3" ry="2.7" transform="rotate(-6 5.9 15.4)"/>
+          <ellipse cx="6.4" cy="20.3" rx="1.3" ry="2.7" transform="rotate(-26 6.4 20.3)"/>
+          <ellipse cx="8.7" cy="24.6" rx="1.3" ry="2.7" transform="rotate(-48 8.7 24.6)"/>
+          <ellipse cx="12.6" cy="27.7" rx="1.3" ry="2.6" transform="rotate(-68 12.6 27.7)"/>
+          <ellipse cx="47.7" cy="6.4" rx="1.3" ry="2.6" transform="rotate(-28 47.7 6.4)"/>
+          <ellipse cx="50.7" cy="10.6" rx="1.3" ry="2.7" transform="rotate(-12 50.7 10.6)"/>
+          <ellipse cx="52.1" cy="15.4" rx="1.3" ry="2.7" transform="rotate(6 52.1 15.4)"/>
+          <ellipse cx="51.6" cy="20.3" rx="1.3" ry="2.7" transform="rotate(26 51.6 20.3)"/>
+          <ellipse cx="49.3" cy="24.6" rx="1.3" ry="2.7" transform="rotate(48 49.3 24.6)"/>
+          <ellipse cx="45.4" cy="27.7" rx="1.3" ry="2.6" transform="rotate(68 45.4 27.7)"/>
+          <path d="M29 6.2l1 2 2.2.3-1.6 1.5.4 2.2-2-1-2 1 .4-2.2-1.6-1.5 2.2-.3z"/>
+          <text x="29" y="17" text-anchor="middle" font-family="Inter Draft,Arial,sans-serif" font-size="3.6" font-weight="600">Best Pitch</text>
+          <text x="29" y="21.6" text-anchor="middle" font-family="Inter Draft,Arial,sans-serif" font-size="3.9" font-weight="600">App of the Day</text>
+        </g>
+      </svg>
+    </div>
+  </footer>
+</div>
+
+<script>
+(function(){
+  /* prompt: live mirror so the red caret always sits after the text */
+  var ta=document.getElementById('brief'),mt=document.getElementById('mtext'),caret=document.getElementById('caret');
+  function sync(){mt.textContent=ta.value;
+    var atEnd=document.activeElement!==ta||(ta.selectionStart===ta.value.length&&ta.selectionEnd===ta.value.length);
+    caret.style.visibility=atEnd?'visible':'hidden';
+    ta.style.caretColor=atEnd?'transparent':'#e0282a';
+    document.getElementById('mirror').scrollTop=ta.scrollTop;}
+  ['input','keyup','click','select','focus','blur','scroll'].forEach(function(e){ta.addEventListener(e,sync)});
+  document.addEventListener('selectionchange',function(){if(document.activeElement===ta)sync()});
+  ta.addEventListener('keydown',function(e){if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();document.getElementById('prompt').requestSubmit()}});
+  document.getElementById('prompt').addEventListener('submit',function(e){e.preventDefault();var b=this.querySelector('.send');b.animate([{transform:'scale(1)'},{transform:'scale(.88)'},{transform:'scale(1)'}],{duration:260});});
+  sync();
+
+  /* burger menu (phone overlay / tablet panel) */
+  var nav=document.getElementById('nav'),bt=document.getElementById('burger'),panel=document.getElementById('nav-panel');
+  function items(){return [].slice.call(panel.querySelectorAll('a')).filter(function(a){return a.getClientRects().length})}
+  function setOpen(o,returnFocus){
+    nav.classList.toggle('open',o);bt.setAttribute('aria-expanded',o);bt.setAttribute('aria-label',o?'Close menu':'Open menu');
+    if(o){var f=items()[0];if(f)setTimeout(function(){f.focus({preventScroll:true})},60)}
+    else if(returnFocus)bt.focus({preventScroll:true});
+  }
+  bt.addEventListener('click',function(){setOpen(!nav.classList.contains('open'),false)});
+  document.addEventListener('keydown',function(e){
+    if(!nav.classList.contains('open'))return;
+    if(e.key==='Escape'){e.preventDefault();setOpen(false,true);return}
+    if(e.key==='Tab'){var it=items();if(!it.length)return;var first=it[0],last=it[it.length-1];      // keep focus inside the open menu
+      if(e.shiftKey&&document.activeElement===first){e.preventDefault();bt.focus()}
+      else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();bt.focus()}
+      else if(!e.shiftKey&&document.activeElement===bt){e.preventDefault();first.focus()}
+      else if(e.shiftKey&&document.activeElement===bt){e.preventDefault();last.focus()}}
+  });
+  document.addEventListener('pointerdown',function(e){if(nav.classList.contains('open')&&!panel.contains(e.target)&&!bt.contains(e.target))setOpen(false,false)});
+  panel.addEventListener('click',function(e){if(e.target.closest('a'))setOpen(false,false)});
+  window.matchMedia('(min-width:1120px) and (min-aspect-ratio:1/1)').addEventListener('change',function(m){if(m.matches&&nav.classList.contains('open'))setOpen(false,false)});
+
+  var mq=window.matchMedia('(min-width:1120px) and (min-aspect-ratio:1/1), (min-width:620px) and (max-width:1119px) and (min-height:501px), (min-width:1120px) and (max-aspect-ratio:999/1000)');
+
+
+
+  /* ---- prompt rim: start the gradient's rotation once the entrance has finished ---- */
+  (function rim(){
+    var box=document.getElementById('prompt');if(!box)return;
+    function go(){box.classList.add('rim-live')}
+    if(document.documentElement.classList.contains('is-entering')){
+      document.addEventListener('entrance:done',go,{once:true});
+      setTimeout(go,4200);                                   // fallback if the entrance was skipped by its failsafe
+    }else go();
+  })();
+  /* ================================================================
+     ENTRANCE — one master timeline, played once per page load.
+     Web Animations API, no dependency. Every tween animates only
+     opacity / translate / scale (+ a clip on the prompt text), uses
+     fill:"backwards" so it holds its start state while waiting and
+     leaves NO style behind when it ends. Nothing runs afterwards.
+  ================================================================ */
+  (function entrance(){
+    var root=document.documentElement;
+    if(!root.classList.contains('is-entering'))return;          // reduced motion / unsupported: static page
+    var started=false;
+    function start(){
+      if(started)return; started=true;
+      if(!root.classList.contains('is-entering'))return;          // failsafe already revealed the page (e.g. opened in a background tab): never replay over visible content
+      clearTimeout(window.__entranceFailsafe);
+      var desk=mq.matches,                                     // desktop or tablet (both sized by --u)
+          u=desk?(document.getElementById('prompt').offsetHeight/134||1):1,
+          k=desk?u:.7;                                           // travel distances scale with the layout; calmer on mobile
+      var EXPO='cubic-bezier(0.16,1,0.3,1)',                     // headline + caret sweep
+          SETTLE='cubic-bezier(0.22,1,0.36,1)',                  // panels & buttons
+          QUART='cubic-bezier(0.25,1,0.5,1)',                    // supporting content
+          FADE='cubic-bezier(0.33,1,0.68,1)';
+      function px(n){return (n*k).toFixed(2)+'px'}
+      function shown(el){return el&&el.getClientRects().length&&getComputedStyle(el).visibility!=='hidden'}
+      var $=function(q){return document.querySelector(q)},$$=function(q){return [].slice.call(document.querySelectorAll(q))};
+
+      /* rise / settle: opacity resolves in the first half, position in full */
+      function arrive(dy,sc){var a={opacity:0,translate:'0 '+px(dy)},b={opacity:1,offset:.55},c={opacity:1,translate:'0 0'};
+        if(sc){a.scale=String(sc);c.scale='1'}return [a,b,c]}
+
+      var headline=$('#headline'),lines=$$('#headline .hl-in');
+      headline.classList.add('is-masking');
+
+      /* ---- MASTER TIMELINE (seconds) ------------------------------------
+         0.10  headline line 1 rises out of its mask
+         0.20  headline line 2
+         0.34  nav: logo, then links L→R, then actions  (settle down from top edge)
+         0.50  glass prompt panel settles
+         0.86  send button
+         0.92  prompt text writes on, caret leading
+         0.90  supporting copy, line by line
+         1.04  CTAs: secondary, then primary
+         1.24  footer row rises from bottom edge; glance hint last
+         ≈2.3  complete — page is static
+      --------------------------------------------------------------------- */
+      var T=[];
+      function at(el,t,dur,kf,ease){if(shown(el))T.push({el:el,t:t,d:dur,kf:kf,e:ease})}
+
+      lines.forEach(function(l,i){at(l,.10+i*.10,1.05,[{translate:'0 105%'},{translate:'0 0'}],EXPO)});
+
+      at($('.logo'),.34,.8,arrive(-8),QUART);
+      $$('.menu li').forEach(function(li,i){at(li,.40+i*.03,.7,arrive(-6),QUART)});
+      at($('.ask'),.66,.7,arrive(-6),QUART);
+      at($('.btn-nav'),.70,.8,arrive(-6,.96),SETTLE);
+      at($('.burger'),.76,.8,arrive(-6,.96),SETTLE);
+
+      at($('.prompt'),.50,1.1,arrive(16,.965),SETTLE);
+      at($('.send'),.86,.65,[{opacity:0,scale:'.78'},{opacity:1,offset:.5},{opacity:1,scale:'1'}],EXPO);
+
+      /* prompt write-on: text un-clips left→right while the caret sweeps with it */
+      var mt=document.getElementById('mtext'),cr=document.getElementById('caret');
+      if(shown(mt)&&mt.textContent){
+        var w=cr.getBoundingClientRect().left-mt.getBoundingClientRect().left;
+        at(cr,.92,.78,[{opacity:0,translate:(-w)+'px 0',easing:'linear'},{opacity:1,translate:(-w)+'px 0',offset:.14,easing:EXPO},{opacity:1,translate:'0 0'}],'linear');
+        at(mt,.92,.78,[{clipPath:'inset(-40% 100% -40% -6px)',easing:'linear'},{clipPath:'inset(-40% 100% -40% -6px)',offset:.14,easing:EXPO},{clipPath:'inset(-40% -6px -40% -6px)'}],'linear');
+      }
+
+      var lede=$$('.lede span'),inline=lede[0]&&getComputedStyle(lede[0]).display==='inline';
+      if(inline){at($('.lede'),.90,.85,[{translate:'0 '+px(10)},{translate:'0 0'}],QUART);
+        lede.forEach(function(s,i){at(s,.90+i*.07,.7,[{opacity:0},{opacity:1}],FADE)})}
+      else lede.forEach(function(s,i){at(s,.90+i*.07,.75,arrive(10),QUART)});
+
+      at($('.cta.ghost'),1.04,.85,arrive(12,.965),SETTLE);
+      at($('.cta.red'),1.11,.85,arrive(12,.965),SETTLE);
+
+      at($('.reel'),1.24,.8,arrive(8),QUART);
+      at($('.logos'),1.28,.9,arrive(8),QUART);
+      at($('.award'),1.52,.8,arrive(8),QUART);
+      at($('.glance'),1.36,.8,arrive(6),QUART);
+
+      var anims=T.map(function(x){return x.el.animate(x.kf,{delay:x.t*1000,duration:x.d*1000,easing:x.e,fill:'backwards'})});
+      root.classList.remove('is-entering');                       // same frame: animations now hold every start state
+
+      Promise.all(anims.map(function(a){return a.finished})).then(finish,finish);
+      function finish(){                                          // clean hand-off to the original static page
+        headline.classList.remove('is-masking');
+        /* Chrome keeps scaled elements on their own compositor layer after the
+           animation, which rasterises their edges half a pixel off the static
+           page. Rebuilding them in one synchronous step (no paint in between)
+           makes the resting frame identical to the original. Skipped if the
+           visitor is already typing inside that element. */
+        var scaled=T.filter(function(x){return x.kf[0].scale}).map(function(x){return x.el});
+        requestAnimationFrame(function(){requestAnimationFrame(function(){   // after the compositor has released the finished animations
+          scaled.forEach(function(e){if(e.contains(document.activeElement))return;
+            var v=e.style.display;e.style.display='none';void e.offsetWidth;e.style.display=v});
+          scaled=null;
+        })});
+        cr.style.animation='none';void cr.offsetWidth;cr.style.animation='';   // pre-existing caret blink restarts cleanly
+        document.dispatchEvent(new Event('entrance:done'));
+        anims=T=null;
+      }
+    }
+    var fontsReady=document.fonts&&document.fonts.ready?document.fonts.ready:Promise.resolve();
+    Promise.race([fontsReady,new Promise(function(r){setTimeout(r,700)})]).then(function(){requestAnimationFrame(start)});
+  })();
+})();
+</script>
+</body>
+</html>
